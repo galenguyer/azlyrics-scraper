@@ -1,6 +1,8 @@
 import argparse
-import sys
+import json
 from json import JSONEncoder
+import re
+import sys
 import requests
 from bs4 import BeautifulSoup
 
@@ -19,11 +21,41 @@ class SongEncoder(JSONEncoder):
         return o.__dict__
 
 
+class SearchResult:
+    def __init__(self, result):
+        self.link = result.a['href']
+        self.title = result.a.b.text.strip('" ')
+        self.artist = result.find_all('b')[1].text
+
+    def __str__(self):
+        return f'{self.title} by {self.artist}'
+
+
 def eprint(*args, **kwargs):
     """
     Print the given message to stderr
     """
     print(*args, file=sys.stderr, **kwargs)
+
+
+def search(term: str) -> str:
+    """
+    Search for a term
+    """
+    original_term = term
+    term = re.sub('[^a-zA-Z0-9 ]+', '', term).strip()
+    term = re.sub(' ', '+', term)
+    search_page = requests.get(f'https://search.azlyrics.com/search.php?q={term}')
+    if search_page.status_code != 200:
+        eprint(f'Status code {search_page.status_code} for search term "{original_term}" indicates failure')
+        return None
+    parsed_page = BeautifulSoup(search_page.text, 'html.parser')
+    search_results = parsed_page.find_all('td', attrs={"class": "text-left visitedlyr"})
+    results = [SearchResult(result) for result in search_results]
+    for num in range(1, min(16, len(results)+1)):
+        print(f'{num}. {results[num-1]}')
+    result = results[int(input('Select a number: '))-1]
+    return result.link
 
 
 def download_url(url: str):
@@ -45,15 +77,19 @@ def download_url(url: str):
     album_info = parsed_page.find_all('div', attrs={"class": "songinalbum_title"})[0]
     album = album_info.b.text.strip('" ')
     year = int(album_info.text.rsplit(' ', 1)[1].strip('( )'))
+    print(json.dumps(Song(title=song_title, artist=artist, album=album, year=year, lyrics=lyrics), indent=4, cls=SongEncoder))
 
 
 def main():
     parser = argparse.ArgumentParser(description='Scraper for lyrics from azlyrics.com')
     parser.add_argument('-u', '--url', help='Direct URL of a song to download')
+    parser.add_argument('-s', '--search', help='Term to search for', nargs='+')
     args = parser.parse_args()
 
     if args.url is not None:
-        download_url(url=args.url)
+        download_url(args.url)
+    elif args.search is not None:
+        download_url(search(' '.join(args.search)))
     else:
         eprint('No URL given, doing nothing')
 
