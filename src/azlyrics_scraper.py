@@ -1,16 +1,30 @@
 import argparse
 import sys
+import requests
+from bs4 import BeautifulSoup
 
 
 def eprint(*args, **kwargs):
     """
-    print the given message to stderr
+    Print the given message to stderr
     """
     print(*args, file=sys.stderr, **kwargs)
 
 
 def download_url(url: str):
-    pass
+    """
+    Retrieve the page contents and parse out the lyrics from a given url
+    """
+    if not url.startswith('https://www.azlyrics.com/lyrics/'):
+        eprint(f'URL "{url}" does not appear to be a valid azlyrics url')
+        return None
+    result = requests.get(url)
+    if result.status_code != 200:
+        eprint(f'Status code {result.status_code} for url "{url}" indicates failure')
+        return None
+    parsed_page = BeautifulSoup(result.text, 'html.parser')
+    # lyrics are consistently on the 20th div in the page
+    lyrics = parsed_page.find_all('div', limit=21)[-1].get_text().strip()
 
 
 def main():
