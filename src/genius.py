@@ -24,7 +24,8 @@ def download_url(url: str):
         return None
     parsed_page = BeautifulSoup(result.text, 'html.parser')
     lyrics = parsed_page.find_all('div', attrs={'class': 'lyrics'})[0].text.strip()
-    print(lyrics)
+    artist = parsed_page.find_all('a', attrs={'class': 'header_with_cover_art-primary_info-primary_artist'})[0].text.strip()
+    title = parsed_page.find_all('h1', attrs={'class': 'header_with_cover_art-primary_info-title'})[0].text.strip()
 
 
 def main():
