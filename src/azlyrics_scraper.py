@@ -45,7 +45,7 @@ def search(term: str) -> str:
     original_term = term
     term = re.sub('[^a-zA-Z0-9 ]+', '', term).strip()
     term = re.sub(' ', '+', term)
-    search_page = requests.get(f'https://search.azlyrics.com/search.php?q={term}')
+    search_page = requests.get(f'https://search.azlyrics.com/search.php?q={term}&w=songs&p=1')
     if search_page.status_code != 200:
         eprint(f'Status code {search_page.status_code} for search term "{original_term}" indicates failure')
         return None
