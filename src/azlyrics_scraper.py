@@ -1,7 +1,22 @@
 import argparse
 import sys
+from json import JSONEncoder
 import requests
 from bs4 import BeautifulSoup
+
+
+class Song:
+    def __init__(self, title: str, artist: str, album: str, year: int, lyrics: str):
+        self.title = title
+        self.artist = artist
+        self.album = album
+        self.year = year
+        self.lyrics = lyrics
+
+
+class SongEncoder(JSONEncoder):
+    def default(self, o):
+        return o.__dict__
 
 
 def eprint(*args, **kwargs):
@@ -24,9 +39,12 @@ def download_url(url: str):
         return None
     parsed_page = BeautifulSoup(result.text, 'html.parser')
     # lyrics are consistently on the 20th div in the page
-    lyrics = parsed_page.find_all('div', limit=21)[-1].get_text().strip()
-    artist = parsed_page.find_all('b')[0].get_text().strip().rsplit(' ', 1)[0]
-    song_title = parsed_page.find_all('b')[1].get_text().strip('" ')
+    lyrics = parsed_page.find_all('div', limit=21)[-1].text.strip()
+    artist = parsed_page.find_all('b')[0].text.strip().rsplit(' ', 1)[0]
+    song_title = parsed_page.find_all('b')[1].text.strip('" ')
+    album_info = parsed_page.find_all('div', attrs={"class": "songinalbum_title"})[0]
+    album = album_info.b.text.strip('" ')
+    year = int(album_info.text.rsplit(' ', 1)[1].strip('( )'))
 
 
 def main():
