@@ -25,6 +25,8 @@ def download_url(url: str):
     parsed_page = BeautifulSoup(result.text, 'html.parser')
     # lyrics are consistently on the 20th div in the page
     lyrics = parsed_page.find_all('div', limit=21)[-1].get_text().strip()
+    artist = parsed_page.find_all('b')[0].get_text().strip().rsplit(' ', 1)[0]
+    song_title = parsed_page.find_all('b')[1].get_text().strip('" ')
 
 
 def main():
