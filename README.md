@@ -1,5 +1,5 @@
 # azlyrics-scraper
-A simple Python tool to scrape lyrics from azlyrics.com
+A simple Python tool to scrape lyrics from azlyrics.com and genius.com
 
 ### pylint
 To run pylint, use the following command:
