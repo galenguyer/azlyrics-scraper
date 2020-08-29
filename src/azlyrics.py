@@ -1,3 +1,4 @@
+import os 
 import argparse
 import json
 from json import JSONEncoder
@@ -78,19 +79,56 @@ def download_url(url: str):
     album_info = parsed_page.find_all('div', attrs={"class": "songinalbum_title"})[0]
     album = album_info.b.text.strip('" ')
     year = album_info.text.rsplit(' ', 1)[1].strip('( )')
-    print(json.dumps(Song(title=song_title, artist=artist, album=album, release=year, lyrics=lyrics, url=url), indent=4, cls=SongEncoder))
+    return Song(title=song_title, artist=artist, album=album, release=year, lyrics=lyrics, url=url)
+
+
+def save_to_file(song: Song):
+    filename = './lyrics/azlyrics_'
+    for c in song.title.lower():
+        if c.isalpha() or c.isdigit():
+            filename = filename + c
+        if c is ' ':
+            filename = filename + '-'
+    filename = filename + '_'
+    for c in song.artist.lower():
+        if c.isalpha() or c.isdigit():
+            filename = filename + c
+        if c is ' ':
+            filename = filename + '-'
+    filename = filename + '.json'
+    if not os.path.isdir('./lyrics'):
+        os.mkdir('./lyrics')
+    f = open(filename, 'w')
+    json.dump(song, f, indent=4, cls=SongEncoder)
+    f.close()
+    print('Lyrics saved to ' + filename)
 
 
 def main():
     parser = argparse.ArgumentParser(description='Scraper for lyrics from azlyrics.com')
     parser.add_argument('-u', '--url', help='Direct URL of a song to download')
     parser.add_argument('-s', '--search', help='Term to search for', nargs='+')
+    parser.add_argument('--no-save', help='Whether or not to save the data to a file', action='store_false')
     args = parser.parse_args()
 
     if args.url is not None:
-        download_url(args.url)
+        song = download_url(args.url)
+        if args.no_save:
+            save_to_file(song)
+        else:
+            print('Title: ' + song.title)
+            print('Artist: ' + song.artist)
+            print('Album: ' + song.album + '\n')
+            print(song.lyrics)
     elif args.search is not None:
-        download_url(search(' '.join(args.search)))
+        song = download_url(search(' '.join(args.search)))
+        if args.no_save:
+            save_to_file(song)
+        else:
+            print('Title: ' + song.title)
+            print('Artist: ' + song.artist)
+            print('Album: ' + song.album + '\n')
+            print(song.lyrics)
     else:
         eprint('No URL given, doing nothing')
 
