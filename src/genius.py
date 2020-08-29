@@ -43,10 +43,10 @@ def download_url(url: str):
     parsed_page = BeautifulSoup(result.text.replace(u"\u2018", "'").replace(u"\u2019", "'"), 'html.parser')
     song_lyrics = parsed_page.find_all('div', attrs={'class': 'lyrics'})[0].text.strip()
     song_data = json.loads([line for line in result.text.split('\n') if 'TRACKING_DATA' in line][0].split('=')[1].strip(' ;'))
-    song_artist = str(song_data['Primary Artist'].encode('ascii', 'ignore').decode("utf-8"))
-    song_title = song_data['Title']
-    song_album = song_data['Primary Album']
-    song_release = song_data['Release Date']
+    song_artist = song_data['Primary Artist'].encode('ascii', 'ignore').decode("utf-8")
+    song_title = song_data['Title'].encode('ascii', 'ignore').decode("utf-8")
+    song_album = song_data['Primary Album'].encode('ascii', 'ignore').decode("utf-8")
+    song_release = song_data['Release Date'].encode('ascii', 'ignore').decode("utf-8")
     song = Song(title=song_title, artist=song_artist, album=song_album, lyrics=song_lyrics, url=url, release=song_release)
     return song
 
