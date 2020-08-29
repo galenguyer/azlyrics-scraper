@@ -82,25 +82,7 @@ def main():
     if args.url is not None:
         song = download_url(args.url)
         if args.no_save:
-            filename = './lyrics/genius_'
-            for c in song.title.lower():
-                if c.isalpha() or c.isdigit():
-                    filename = filename + c
-                if c is ' ':
-                    filename = filename + '-'
-            filename = filename + '_'
-            for c in song.artist.lower():
-                if c.isalpha() or c.isdigit():
-                    filename = filename + c
-                if c is ' ':
-                    filename = filename + '-'
-            filename = filename + '.json'
-            if not os.path.isdir('./lyrics'):
-                os.mkdir('./lyrics')
-            f = open(filename, 'w')
-            json.dump(song, f, indent=4, cls=SongEncoder)
-            f.close()
-            print('Lyrics saved to ' + filename)
+            save_to_file(song)
         else:
             print('Title: ' + song.title)
             print('Artist: ' + song.artist)
