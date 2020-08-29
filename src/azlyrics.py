@@ -8,11 +8,11 @@ from bs4 import BeautifulSoup
 
 
 class Song:
-    def __init__(self, title: str, artist: str, album: str, year: int, lyrics: str, url: str):
+    def __init__(self, title: str, artist: str, album: str, release: str, lyrics: str, url: str):
         self.title = title
         self.artist = artist
         self.album = album
-        self.year = year
+        self.release = release
         self.lyrics = lyrics
         self.url = url
 
@@ -77,8 +77,8 @@ def download_url(url: str):
     song_title = parsed_page.find_all('b')[1].text.strip('" ')
     album_info = parsed_page.find_all('div', attrs={"class": "songinalbum_title"})[0]
     album = album_info.b.text.strip('" ')
-    year = int(album_info.text.rsplit(' ', 1)[1].strip('( )'))
-    print(json.dumps(Song(title=song_title, artist=artist, album=album, year=year, lyrics=lyrics, url=url), indent=4, cls=SongEncoder))
+    year = album_info.text.rsplit(' ', 1)[1].strip('( )')
+    print(json.dumps(Song(title=song_title, artist=artist, album=album, release=year, lyrics=lyrics, url=url), indent=4, cls=SongEncoder))
 
 
 def main():
