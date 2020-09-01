@@ -112,22 +112,16 @@ def save_to_file(song: Song):
 
 def main():
     parser = argparse.ArgumentParser(description='Scraper for lyrics from azlyrics.com')
-    parser.add_argument('-u', '--url', help='Direct URL of a song to download')
-    parser.add_argument('-s', '--search', help='Term to search for', nargs='+')
+    parser.add_argument('term', metavar='TERM', help='Term to search for', nargs='+')
     parser.add_argument('--no-save', help='Whether or not to save the data to a file', action='store_false')
     args = parser.parse_args()
 
-    if args.url is not None:
-        song = download_url(args.url)
-        if args.no_save:
-            save_to_file(song)
+    if args.term is not None:
+        term = ' '.join(args.term)
+        if term.startswith('https://www.azlyrics.com/lyrics/'):
+            song = download_url(term)
         else:
-            print('Title: ' + song.title)
-            print('Artist: ' + song.artist)
-            print('Album: ' + song.album + '\n')
-            print(song.lyrics)
-    elif args.search is not None:
-        song = download_url(search(' '.join(args.search)))
+            song = download_url(search(term))
         if args.no_save:
             save_to_file(song)
         else:

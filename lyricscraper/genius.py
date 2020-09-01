@@ -83,7 +83,7 @@ def download_url(url: str):
     song_data = json.loads([line for line in result.text.split('\n') if 'TRACKING_DATA' in line][0].split('=')[1].strip(' ;'))
     song_artist = song_data['Primary Artist'].encode('ascii', 'ignore').decode("utf-8")
     song_title = song_data['Title'].encode('ascii', 'ignore').decode("utf-8")
-    song_album = song_data['Primary Album'].encode('ascii', 'ignore').decode("utf-8")
+    song_album = (song_data['Primary Album'] if song_data['Primary Album'] is not None else 'Unknown Album').encode('ascii', 'ignore').decode("utf-8")
     song_release = song_data['Release Date'].encode('ascii', 'ignore').decode("utf-8")
     song = Song(title=song_title, artist=song_artist, album=song_album, lyrics=song_lyrics, url=url, release=song_release)
     return song
@@ -113,22 +113,16 @@ def save_to_file(song: Song):
 
 def main():
     parser = argparse.ArgumentParser(description='Scraper for lyrics from genius.com')
-    parser.add_argument('-u', '--url', help='Direct URL of a song to download')
-    parser.add_argument('-s', '--search', help='Term to search for', nargs='+')
+    parser.add_argument('term', metavar='TERM', help='Term to search for', nargs='+')
     parser.add_argument('--no-save', help='Whether or not to save the data to a file', action='store_false')
     args = parser.parse_args()
 
-    if args.url is not None:
-        song = download_url(args.url)
-        if args.no_save:
-            save_to_file(song)
+    if args.term is not None:
+        term = ' '.join(args.term)
+        if term.startswith('https://genius.com/'):
+            song = download_url(term)
         else:
-            print('Title: ' + song.title)
-            print('Artist: ' + song.artist)
-            print('Album: ' + song.album + '\n')
-            print(song.lyrics)
-    elif args.search is not None:
-        song = download_url(search(' '.join(args.search)))
+            song = download_url(search(term))
         if args.no_save:
             save_to_file(song)
         else:
