@@ -58,6 +58,9 @@ def search(term: str) -> str:
     if len(results) == 0:
         eprint(f'No songs found for query {original_term}')
         sys.exit(1)
+    if len(results) is 1:
+        print(f'Only result found is {results[0]}')
+        return results[0].link
     for num in range(1, min(16, len(results)+1)):
         print(f'{num}. {results[num-1]}')
     result = results[int(input('Select a number: '))-1]
