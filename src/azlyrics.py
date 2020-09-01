@@ -54,6 +54,9 @@ def search(term: str) -> str:
     parsed_page = BeautifulSoup(search_page.text, 'html.parser')
     search_results = parsed_page.find_all('td', attrs={"class": "text-left visitedlyr"})
     results = [SearchResult(result) for result in search_results]
+    if len(results) == 0:
+        eprint(f'No songs found for query {original_term}')
+        sys.exit(1)
     for num in range(1, min(16, len(results)+1)):
         print(f'{num}. {results[num-1]}')
     result = results[int(input('Select a number: '))-1]

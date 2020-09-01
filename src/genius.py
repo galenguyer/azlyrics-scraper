@@ -2,6 +2,7 @@ import os
 import argparse
 import json
 import sys
+import re
 import requests
 from json import JSONEncoder
 from bs4 import BeautifulSoup
@@ -22,11 +23,45 @@ class SongEncoder(JSONEncoder):
         return o.__dict__
 
 
+class SearchResult:
+    def __init__(self, result):
+        result =  result['result']
+        self.link = result['url'].encode('ascii', 'ignore').decode("utf-8")
+        self.title = result['title'].encode('ascii', 'ignore').decode("utf-8")
+        self.artist = result['primary_artist']['name'].encode('ascii', 'ignore').decode("utf-8")
+
+    def __str__(self):
+        return f'{self.title} by {self.artist}'
+
+
 def eprint(*args, **kwargs):
     """
     Print the given message to stderr
     """
     print(*args, file=sys.stderr, **kwargs)
+
+
+def search(term: str) -> str:
+    """
+    Search for a term
+    """
+    original_term = term
+    term = re.sub('[^a-zA-Z0-9 ]+', '', term).strip()
+    term = re.sub(' ', '+', term)
+    search_page = requests.get(f'https://genius.com/api/search/song?page=1&q={term}')
+    if search_page.status_code != 200:
+        eprint(f'Status code {search_page.status_code} for search term "{original_term}" indicates failure')
+        return None
+    parsed_page = json.loads(search_page.text)
+    search_results = parsed_page['response']['sections'][0]['hits']
+    results = [SearchResult(result) for result in search_results]
+    if len(results) == 0:
+        eprint(f'No songs found for query {original_term}')
+        sys.exit(1)
+    for num in range(1, min(16, len(results)+1)):
+        print(f'{num}. {results[num-1]}')
+    result = results[int(input('Select a number: '))-1]
+    return result.link
 
 
 def download_url(url: str):
@@ -76,11 +111,21 @@ def save_to_file(song: Song):
 def main():
     parser = argparse.ArgumentParser(description='Scraper for lyrics from genius.com')
     parser.add_argument('-u', '--url', help='Direct URL of a song to download')
+    parser.add_argument('-s', '--search', help='Term to search for', nargs='+')
     parser.add_argument('--no-save', help='Whether or not to save the data to a file', action='store_false')
     args = parser.parse_args()
 
     if args.url is not None:
         song = download_url(args.url)
+        if args.no_save:
+            save_to_file(song)
+        else:
+            print('Title: ' + song.title)
+            print('Artist: ' + song.artist)
+            print('Album: ' + song.album + '\n')
+            print(song.lyrics)
+    elif args.search is not None:
+        song = download_url(search(' '.join(args.search)))
         if args.no_save:
             save_to_file(song)
         else:
